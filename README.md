@@ -60,4 +60,7 @@ This project is a simple video player built using Qt and OpenCV. The player read
 - OpenCV 4.x
 - CMake 3.5 or later
 
+## Demo Video
+[Screencast from 08-14-2024 07:51:52 PM.webm](https://github.com/user-attachments/assets/a5bcd8ca-b8de-4368-ab3d-93b77b6f7989)
+
 
