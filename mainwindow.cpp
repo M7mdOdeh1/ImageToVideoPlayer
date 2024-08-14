@@ -12,12 +12,17 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    statusBar()->showMessage("Ready");
+
 
     // Specify the path to the images
     imagePath = "../VideoPlayer/trip/left";
     loadImages();
 
-    // Connect the buttons and slider to their respective slots
+    // Initialize the progress bar
+    ui->progressBar->setRange(0, imageFiles.size() - 1);
+    ui->progressBar->setValue(0);
+
     connect(ui->playButton, &QPushButton::clicked, this, &MainWindow::onPlayButtonClicked);
     connect(ui->pauseButton, &QPushButton::clicked, this, &MainWindow::onPauseButtonClicked);
     connect(ui->speedSlider, &QSlider::valueChanged, this, &MainWindow::onSpeedChanged);
@@ -40,7 +45,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Set up the playback speed slider
     ui->speedSlider->setRange(10, 200); // 0.1x to 2.0x speed
-    ui->speedSlider->setValue(100);     // Default to 1x speed
+    ui->speedSlider->setValue(100);     // Default 1x speed (30 fps)
 }
 
 MainWindow::~MainWindow()
@@ -113,6 +118,7 @@ void MainWindow::updateFrame()
         currentFrameIndex = 0; // Reset to the beginning
         displayCurrentFrame();
     }
+    ui->progressBar->setValue(currentFrameIndex);
 }
 
 void MainWindow::displayCurrentFrame()
