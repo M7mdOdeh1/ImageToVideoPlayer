@@ -24,15 +24,23 @@ private slots:
     void onPauseButtonClicked();
     void onSpeedChanged(int value);
     void updateFrame();
+    void calculateFPS();
+    
 
 private:
     Ui::MainWindow *ui;
     QTimer *timer;
+    QTimer *fpsTimer;
     std::vector<std::string> imageFiles;
     std::string imagePath;
     int currentFrameIndex;
     int fps;
     double playbackSpeed;
+    std::chrono::high_resolution_clock::time_point lastFrameTime;
+    double realFPS = 0.0;
+    int frameCount = 0;    // Frame counter
+    double calculatedFPS = 0.0; // FPS calculated using the second timer
+
 
     void loadImages();
     void displayCurrentFrame();

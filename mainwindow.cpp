@@ -12,9 +12,6 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    statusBar()->showMessage("Ready");
-
-
     // Specify the path to the images
     imagePath = "../VideoPlayer/trip/left";
     loadImages();
@@ -43,15 +40,32 @@ MainWindow::MainWindow(QWidget *parent)
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MainWindow::updateFrame);
 
+    // Set up a second timer to calculate FPS every second
+    fpsTimer = new QTimer(this);
+    connect(fpsTimer, &QTimer::timeout, this, &MainWindow::calculateFPS);
+    fpsTimer->start(1000);  // Trigger every second
+
+
     // Set up the playback speed slider
     ui->speedSlider->setRange(10, 200); // 0.1x to 2.0x speed
-    ui->speedSlider->setValue(100);     // Default 1x speed (30 fps)
+    ui->speedSlider->setValue(100);     // Default 1x speed(30 fps)
+
+    // Initialize lastFrameTime and lastSecondTime to the current time
+    lastFrameTime = std::chrono::high_resolution_clock::now();
+
+
 }
 
 MainWindow::~MainWindow()
 {
     delete timer;
     delete ui;
+}
+
+void MainWindow::calculateFPS()
+{
+    calculatedFPS = frameCount;
+    frameCount = 0;  
 }
 
 void MainWindow::loadImages()
@@ -64,12 +78,18 @@ void MainWindow::loadImages()
         imageFiles.push_back(filename.toStdString());
     }
 
-    // Sort images by the numeric index between the last underscore and the last dot
+    // Sort images alphapetically
+    // std::sort(imageFiles.begin(), imageFiles.end());
+
+
+    // Sort images by the numeric index before the last dot
     std::sort(imageFiles.begin(), imageFiles.end(), [](const std::string &a, const std::string &b) {
-        std::string numA = a.substr(a.rfind('_') + 1, a.rfind('.') - a.rfind('_') - 1);
-        std::string numB = b.substr(b.rfind('_') + 1, b.rfind('.') - b.rfind('_') - 1);
-        return std::stod(numA) < std::stod(numB);
+        std::string numA = a.substr(0, a.rfind('.')); // remove .jpeg
+        std::string numB = b.substr(0, b.rfind('.')); // remove .jpeg
+        return std::stod(numA) < std::stod(numB); 
     });
+
+    
 }
 
 
@@ -77,6 +97,10 @@ void MainWindow::onPlayButtonClicked()
 {
     if (!timer->isActive()) {
         timer->start(1000 / (fps * playbackSpeed));
+    }
+
+    if (!fpsTimer->isActive()) {
+        fpsTimer->start(1000);
     }
     
     ui->playButton->setEnabled(false);
@@ -88,6 +112,10 @@ void MainWindow::onPauseButtonClicked()
 {
     if (timer->isActive()) {
         timer->stop();
+    }
+
+    if(fpsTimer->isActive()) {
+        fpsTimer->stop();
     }
 
     ui->playButton->setEnabled(true);
@@ -109,8 +137,17 @@ void MainWindow::onSpeedChanged(int value)
     }
 }
 
-void MainWindow::updateFrame()
-{
+void MainWindow::updateFrame() {
+    // Calculate the time since the last frame
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsedTime = currentTime - lastFrameTime;
+    realFPS = 1.0 / elapsedTime.count();  // Calculate the real FPS based on time between frames
+
+    lastFrameTime = currentTime;  
+
+    // Count the number of frames in one second
+    frameCount++;
+   
     if (currentFrameIndex < imageFiles.size()) {
         displayCurrentFrame();
         currentFrameIndex++;
@@ -126,9 +163,16 @@ void MainWindow::displayCurrentFrame()
     QString currentImagePath = QString::fromStdString(imagePath) + "/" + QString::fromStdString(imageFiles[currentFrameIndex]);
     cv::Mat image = cv::imread(currentImagePath.toStdString());
 
+
+
     if (!image.empty()) {
         // Display the frame rate on the top-right corner
-        cv::putText(image, "FPS: " + std::to_string(fps * playbackSpeed), cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 255, 0), 2);
+        cv::putText(image, "Desired FPS: " + std::to_string(fps * playbackSpeed), cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 255, 0), 2);
+
+        // Display the real FPS on the frame
+        cv::putText(image, "FPS: " + std::to_string(realFPS), cv::Point(10, 60), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 255, 0), 2);
+        cv::putText(image, "FPS: " + std::to_string(calculatedFPS), cv::Point(10, 90), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 255, 0), 2);
+
 
         // Convert cv::Mat to QImage
         QImage qimage(image.data, image.cols, image.rows, image.step, QImage::Format_RGB888);
