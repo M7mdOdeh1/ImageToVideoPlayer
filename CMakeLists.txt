@@ -13,17 +13,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_PREFIX_PATH "/home/m7mdodeh/qt/6.7.2/gcc_64/")
 
-
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
-find_package(OpenCV REQUIRED)  
-
+find_package(OpenCV REQUIRED)
 
 set(PROJECT_SOURCES
-        main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        mainwindow.ui
+    main.cpp
+    mainwindow.cpp
+    mainwindow.h
+    mainwindow.ui
+    src/fpscalculator.cpp
+    include/fpscalculator.h
+    src/frameprocessor.cpp
+    include/frameprocessor.h
+    src/imageloader.cpp
+    include/imageloader.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -31,17 +35,11 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
-# Define target properties for Android with Qt 6 as:
-#    set_property(TARGET VideoPlayerTest APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
-# For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
 else()
     if(ANDROID)
         add_library(VideoPlayer SHARED
             ${PROJECT_SOURCES}
         )
-# Define properties for Android with Qt 5 after find_package() calls as:
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
         add_executable(VideoPlayer
             ${PROJECT_SOURCES}
@@ -50,7 +48,6 @@ else()
 endif()
 
 target_link_libraries(VideoPlayer PRIVATE Qt${QT_VERSION_MAJOR}::Widgets ${OpenCV_LIBS})  # Link against OpenCV
-
 
 set_target_properties(VideoPlayer PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
