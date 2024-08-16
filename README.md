@@ -1,14 +1,16 @@
 # Video Player with Qt and OpenCV
 
-This project is a simple video player built using Qt and OpenCV. The player reads a series of images and plays them as a video, with features such as play/pause, speed control, and a progress bar.
+This project is a video player built using Qt and OpenCV. It reads a series of images and plays them as a video, with features such as play/pause, speed control, grayscale conversion, rotation, and a progress bar.
 
 ## Features
 
 - **Play/Pause**: Start and stop video playback with the click of a button.
-- **Speed Control**: Adjust the playback speed from 0.1x to 2.0x using a slider to controll the frame rate per second (FPS). 
+- **Speed Control**: Adjust the playback speed from 0.1x to 2.0x using a slider, controlling the frame rate per second (FPS).
 - **Progress Bar**: Track video progress and seek to a specific frame.
-- **FPS Display**: Displays the current frame rate in the top-right corner of the video.
+- **FPS Display**: Displays both real-time FPS and calculated FPS in the top-right corner of the video.
 - **Loop Playback**: Automatically loops the video when it reaches the end.
+- **Grayscale and Red Channel Modes**: Toggle grayscale and red-channel-only modes using keyboard arrow keys.
+- **Rotation**: Rotate the video in 90-degree increments with the left and right arrow keys.
 
 ## Steps Taken to Complete the Project
 
@@ -23,29 +25,42 @@ This project is a simple video player built using Qt and OpenCV. The player read
      - `QProgressBar` named `progressBar` for showing the progress of the video.
      - `QLabel` named `playbackSpeed` for displaying the current speed of the video.
 
-### 2. **Implementing the Main Window Logic**
-   - Created the `MainWindow` class in `mainwindow.h` and `mainwindow.cpp`.
-   - Implemented the `loadImages()` function to load images from a specified directory and sort them based on their numeric index.
-   - Connected the UI elements (`playButton`, `pauseButton`, `speedSlider`) to their respective slots.
+### 2. **Refactoring for Clean Code**
+   - Extracted the image loading logic into a dedicated `ImageLoader` class for better separation of concerns.
+   - Created a `FrameProcessor` class to handle grayscale conversion, red-channel manipulation, and rotation functionality, decoupling image processing from the main window logic.
+   - Added an `FPSCalculator` class to manage FPS calculations, including both real-time and average FPS calculation approaches.
+
+### 3. **Modularization and Code Clean-Up**
+   - Refactored `MainWindow` to utilize the newly introduced classes, making the code more modular and easier to maintain.
+   - Removed redundant logic from `MainWindow` and moved it to the appropriate classes.
+   - Enhanced the readability and maintainability of the code by dividing functionality into single-purpose classes.
+
+### 4. **Implementing the Main Window Logic**
+   - Implemented the `loadImages()` function in `ImageLoader` to load images from a specified directory and sort them based on their numeric index.
+   - Connected the UI elements (`playButton`, `pauseButton`, `speedSlider`) to their respective slots in the main window.
    - Set up a `QTimer` to handle the frame updates at regular intervals based on the playback speed.
+   - Added key press handling for toggling grayscale, red-channel-only modes, and rotating the video.
 
-### 3. **Adding Icons and Style to Buttons**
-   - Loaded icons for the play and pause buttons using `QIcon`.
-   - Adjusted the icon size using `setIconSize()`.
-   - Applied a transparent background to the buttons using `setStyleSheet()`.
+### 5. **Enhancing User Experience**
+   - Added icons for the play and pause buttons using `QIcon`.
+   - Adjusted the icon size using `setIconSize()` and applied a transparent background using `setStyleSheet()`.
+   - Ensured smooth playback and seamless transitions between different playback speeds.
+   - Displayed FPS information on the video frames to give users real-time performance feedback.
 
-### 4. **Implementing Video Playback Functionality**
+### 6. **Implementing Video Playback Functionality**
    - Created the `updateFrame()` function to display the current frame in the `frameLabel`.
-   - Updated the progress bar using `ui->progressBar->setValue(currentFrameIndex)` within `updateFrame()`.
-   - Implemented looping functionality by resetting `currentFrameIndex` to `0` when it reaches the end.
+   - Updated the progress bar in real-time using `ui->progressBar->setValue(currentFrameIndex)` within `updateFrame()`.
+   - Implemented looping functionality by resetting `currentFrameIndex` to `0` when it reaches the end of the video.
 
-### 5. **Handling Playback Speed Changes**
+### 7. **Handling Playback Speed Changes**
    - Connected the `speedSlider` value changes to the `onSpeedChanged()` function.
    - Updated the playback speed dynamically and reflected it in the `playbackSpeed` label.
+   - Ensured that the FPS calculation and video frame timing adjusted appropriately to the new speed.
 
-### 6. **Final Touches**
-   - Added a status bar message to indicate the progress of the video. 
-   - Added additional features such as automatically disabling the play button after clicking and enabling it after pause.
+### 8. **Final Touches**
+   - Added status bar messages to indicate the progress of the video.
+   - Enhanced the user experience by automatically disabling the play button after clicking and enabling it after pausing.
+   - Ensured that keypress events work across different UI elements by setting the appropriate focus policies.
 
 ## How to Run
 
