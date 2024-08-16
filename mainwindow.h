@@ -6,6 +6,8 @@
 #include <QTimer>
 #include <vector>
 #include <string>
+#include <QKeyEvent>
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -19,12 +21,16 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
+
 private slots:
     void onPlayButtonClicked();
     void onPauseButtonClicked();
     void onSpeedChanged(int value);
     void updateFrame();
     void calculateFPS();
+
     
 
 private:
@@ -41,6 +47,9 @@ private:
     int frameCount = 0;    // Frame counter
     double calculatedFPS = 0.0; // FPS calculated using the second timer
 
+    bool isGrayscale;
+    bool isRedChannel;
+    double rotationAngle;
 
     void loadImages();
     void displayCurrentFrame();

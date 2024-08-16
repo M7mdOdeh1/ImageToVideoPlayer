@@ -9,6 +9,9 @@ MainWindow::MainWindow(QWidget *parent)
     , currentFrameIndex(0)
     , fps(30)
     , playbackSpeed(1.0)
+    , isGrayscale(false)
+    , isRedChannel(false)
+    , rotationAngle(0.0)
 {
     ui->setupUi(this);
 
@@ -36,6 +39,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->pauseButton->setEnabled(false);
 
 
+
+
     // Set up a timer for updating frames
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MainWindow::updateFrame);
@@ -53,6 +58,9 @@ MainWindow::MainWindow(QWidget *parent)
     // Initialize lastFrameTime and lastSecondTime to the current time
     lastFrameTime = std::chrono::high_resolution_clock::now();
 
+    this->setFocusPolicy(Qt::StrongFocus);
+    
+
 
 }
 
@@ -66,6 +74,27 @@ void MainWindow::calculateFPS()
 {
     calculatedFPS = frameCount;
     frameCount = 0;  
+}
+
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Up) {
+        isGrayscale = !isGrayscale;
+    }
+
+    if (event->key() == Qt::Key_Down) {
+        isRedChannel = !isRedChannel;
+    }
+
+    if (event->key() == Qt::Key_Left) {
+        rotationAngle -= 90.0;
+    }
+
+    if (event->key() == Qt::Key_Right) {
+        rotationAngle += 90.0;
+    }
+
+    displayCurrentFrame();
 }
 
 void MainWindow::loadImages()
@@ -173,6 +202,24 @@ void MainWindow::displayCurrentFrame()
         cv::putText(image, "FPS: " + std::to_string(realFPS), cv::Point(10, 60), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 255, 0), 2);
         cv::putText(image, "FPS: " + std::to_string(calculatedFPS), cv::Point(10, 90), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 255, 0), 2);
 
+        if (isGrayscale) {
+            cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
+            cv::cvtColor(image, image, cv::COLOR_GRAY2BGR);
+        } 
+
+        if (isRedChannel) {
+            std::vector<cv::Mat> channels;
+            cv::split(image, channels);
+            channels[0] = cv::Mat::zeros(channels[1].size(), CV_8UC1);
+            channels[1] = cv::Mat::zeros(channels[2].size(), CV_8UC1);
+            cv::merge(channels, image);
+        }
+
+        if (rotationAngle != 0.0) {
+            cv::Point2f center(image.cols / 2.0, image.rows / 2.0);
+            cv::Mat rotationMatrix = cv::getRotationMatrix2D(center, rotationAngle, 1.0);
+            cv::warpAffine(image, image, rotationMatrix, image.size());
+        }
 
         // Convert cv::Mat to QImage
         QImage qimage(image.data, image.cols, image.rows, image.step, QImage::Format_RGB888);
